@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="assets/ccs_logo.jpg" type="image/x-icon">
+
+  <title>TouchTrack</title>
+  
+  <!-- External Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!--analytics-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!--PDF-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- Icons -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #f0f4f8;
+      color: #333;
+    }
+
+    /* Splash Screen */
+    #splash-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #4CAF50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+      transition: opacity 0.6s ease-out;
+    }
+    
+    .splash-logo { /* space between logos */
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid white; /* Optional: white frame around the logo */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Optional: soft shadow */
+      margin-bottom: 20px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+    
+    .logo-row {
+      display: flex;
+      flex-direction: row;
+      gap: 20px; /* space between logos */
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    #splash-screen h1 {
+      font-size: 80px;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      animation: fadeIn 2s ease-in-out;
+    }
+    #start-btn {
+      background: #ffffff;
+      color: #4CAF50;
+      padding: 10px 30px;
+      font-size: 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.3s, transform 0.2s;
+    }
+    #start-btn:hover {
+      background: #e0e0e0;
+      transform: scale(1.05);
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Connection Choice Screen */
+    #connection-choice {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      text-align: center;
+      padding: 20px;
+      transition: opacity 0.6s ease-out;
+    }
+    #connection-choice h2 {
+      font-size: 32px;
+      margin-bottom: 30px;
+    }
+    .choice-button {
+      background: #4CAF50;
+      color: white;
+      padding: 14px 30px;
+      margin: 10px;
+      font-size: 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      min-width: 180px; /* <- Add this line to equalize width */
+      text-align: center;
+    }
+    .choice-button:hover {
+      background: #45a049;
+      transform: scale(1.05);
+    }
+
+    /* Main App */
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
+    .logo {
+      font-size: 40px;
+      font-weight: bold;
+      color: #4CAF50;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: 2.5em;
+      color: #4CAF50;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .section-selector,
+    input,
+    select {
+      width: 100%;
+      padding: 14px;
+      font-size: 1em;
+      margin: 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    .btn,
+    .done-btn {
+      background: #4CAF50;
+      color: white;
+      padding: 14px;
+      width: 100%;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 12px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    .btn:hover,
+    .done-btn:hover {
+      background: #45a049;
+      transform: scale(1.02);
+    }
+    .attendance-container {
+      width: 100%;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      margin-bottom: 30px;
+      transition: all 0.4s ease-in-out;
+    }
+    .section-title {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #333;
+      margin: 20px 0 10px;
+    }
+    .attendance-list {
+      width: 100%;
+      margin-top: 15px;
+      display: grid;
+      gap: 12px;
+    }
+    .attendance-card {
+      display: flex;
+      align-items: center;
+      background: #fdfdfd;
+      border-left: 5px solid;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .attendance-card.present { border-color: #4CAF50; }
+    .attendance-card.late { border-color: orange; }
+    .attendance-card.absent { border-color: red; }
+    .attendance-card i {
+      margin-right: 12px;
+      font-size: 1.4em;
+    }
+    .hidden {
+      display: none;
+    }
+    
+    /* Analytics */
+    #analytics-section {
+      margin-top: 20px;
+    }
+    
+    .back-btn { 
+      background: url('https://cdn-icons-png.flaticon.com/512/271/271220.png') no-repeat center;
+      background-size: 24px 24px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: background-color 0.3s;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+    }
+
+    .back-btn:hover {
+      background-color: #e0e0e0;
+    }
+    
+    @media (max-width: 600px) {
+      .container { padding: 20px; }
+      .logo { font-size: 32px; }
+      h1 { font-size: 2em; }
+      #splash-screen h1 { font-size: 50px; }
+      .splash-logo { width: 100px; height: 100px; }
+    }
+    
+  </style>
+</head>
+
+<body>
+  <!-- Back Button -->
+  <button onclick="goBack()" class="back-btn" aria-label="Back"></button>
+
+  <!-- Splash Screen -->
+  <div id="splash-screen">  <!-- CCS Logo -->
+    <div class="logo-row">
+      <img src="assets/ccs_logo.jpg" alt="CCS Logo" class="splash-logo" />
+      <img src="assets/BSIT.jpg" alt="BSIT Logo" class="splash-logo" />
+    </div>
+    <h1>Welcome to TouchTrack</h1>
+    <button id="start-btn">Start</button>
+  </div>
+
+  <!-- Connection Choice Screen -->
+  <div id="connection-choice" class="hidden">
+    <h2>Choose Connection Type:</h2>
+    <button class="choice-button" id="bluetooth-btn">Bluetooth</button>
+    <button class="choice-button" id="wired-btn">Wired</button>
+  </div>
+
+  <!-- Main App -->
+  <div class="container hidden" id="main-app">
+    <div class="logo">TouchTrack</div>
+    <h1>Attendance Tracker</h1>
+
+    <!-- Section Selection -->
+    <select id="section-select" class="section-selector">
+      <option value="" disabled selected>Select Section</option>
+      <option value="BS INFO 1A">BS INFO 1A</option>
+      <option value="BS INFO 1B">BS INFO 1B</option>
+      <option value="BS INFO 1C">BS INFO 1C</option>
+      <option value="BS INFO 1D">BS INFO 1D</option>
+    </select>
+
+    <!-- Attendance Form -->
+    <div class="attendance-container hidden" id="attendance-form">
+      <h2>Attendance: <span id="current-section-name"></span></h2>
+      <input type="text" id="student-name" placeholder="Student Name" />
+      <input type="date" id="attendance-date" />
+      <select id="attendance-status">
+        <option value="present">Present</option>
+        <option value="late">Late</option>
+        <option value="absent">Absent</option>
+      </select>
+      <button class="btn" id="submit-attendance">Submit</button>
+      <button class="done-btn" id="done-attendance">Done Attendance</button>
+    </div>
+
+    <!-- Attendance Lists -->
+    <div id="section-lists"></div>
+    <button class="btn hidden" id="view-analytics-btn">View Analytics</button>
+    
+    <!-- Analytics Section -->
+    <div id="analytics-section" class="attendance-container hidden">
+      <h2 id="analytics-title">Attendance Analytics</h2>
+      <canvas id="attendance-chart" height="150"></canvas>
+      <button id="generatePdfBtn" class="btn">Generate Attendance PDF</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const splashScreen = document.getElementById('splash-screen');
+      const connectionChoice = document.getElementById('connection-choice');
+      const mainApp = document.getElementById('main-app');
+      const startBtn = document.getElementById('start-btn');
+
+      const bluetoothBtn = document.getElementById('bluetooth-btn');
+      const wiredBtn = document.getElementById('wired-btn');
+
+      const sectionSelect = document.getElementById('section-select');
+      const attendanceForm = document.getElementById('attendance-form');
+      const currentSectionName = document.getElementById('current-section-name');
+      const sectionLists = document.getElementById('section-lists');
+
+      const nameInput = document.getElementById('student-name');
+      const dateInput = document.getElementById('attendance-date');
+      const statusSelect = document.getElementById('attendance-status');
+
+      const submitBtn = document.getElementById('submit-attendance');
+      const doneBtn = document.getElementById('done-attendance');
+      
+      const viewAnalyticsBtn = document.getElementById('view-analytics-btn');
+      const analyticsSection = document.getElementById('analytics-section');
+      
+      // Set today's date as default
+      const today = new Date().toISOString().split('T')[0];
+      dateInput.value = today;
+
+      let currentSection = '';
+      const sectionData = {};
+      let chart = null; // Chart instance
+
+      // User clicks start to proceed to connection choice
+      startBtn.addEventListener('click', () => {
+        splashScreen.style.opacity = '0';
+        startBtn.style.opacity = '0'; // Fade out the start button as well
+        setTimeout(() => {
+          splashScreen.style.display = 'none';
+          connectionChoice.classList.remove('hidden');
+        }, 600);
+      });
+
+      // User picks connection type
+      bluetoothBtn.addEventListener('click', startApp);
+      wiredBtn.addEventListener('click', startApp);
+
+      function startApp() {
+        connectionChoice.style.opacity = '0';
+        setTimeout(() => {
+          connectionChoice.style.display = 'none';
+          mainApp.classList.remove('hidden');
+        }, 600);
+      }
+
+      sectionSelect.addEventListener('change', () => {
+        currentSection = sectionSelect.value;
+        currentSectionName.textContent = currentSection;
+        attendanceForm.classList.remove('hidden');
+        nameInput.value = '';
+        dateInput.value = today; // Reset to today's date
+        statusSelect.value = 'present';
+        sectionLists.innerHTML = '';
+        viewAnalyticsBtn.classList.add('hidden');
+      });
+
+      submitBtn.addEventListener('click', () => {
+        const name = nameInput.value.trim();
+        const date = dateInput.value;
+        const status = statusSelect.value;
+
+        if (!name || !date || !status) {
+          alert("Please fill all fields.");
+          return;
+        }
+
+        if (!sectionData[currentSection]) sectionData[currentSection] = [];
+
+        sectionData[currentSection].push({ name, date, status });
+
+        nameInput.value = ''; // name
+        dateInput.value = today; // Reset to today's date
+        statusSelect.value = 'present';
+        nameInput.focus();
+      });
+
+      doneBtn.addEventListener('click', () => {
+        if (sectionData[currentSection] && sectionData[currentSection].length > 0) {
+          renderSectionList(currentSection);
+          viewAnalyticsBtn.classList.remove('hidden');
+        }
+        attendanceForm.classList.add('hidden');
+        sectionSelect.value = sectionSelect; //section
+        currentSection = currentSection; //section
+      });
+
+      function renderSectionList(section) {
+        const list = sectionData[section] || [];
+        const div = document.createElement('div');
+        div.innerHTML = `<h3 class="section-title">${section} Attendance List</h3>`;
+        const ul = document.createElement('div');
+        ul.className = 'attendance-list';
+
+        list.forEach(entry => {
+          const li = document.createElement('div');
+          li.className = `attendance-card ${entry.status}`;
+          li.innerHTML = `
+            <i class="fas fa-${getIcon(entry.status)}"></i>
+            <span>${entry.name} - ${capitalize(entry.status)} (${formatDate(entry.date)})</span>
+          `;
+          ul.appendChild(li);
+        });
+
+        div.appendChild(ul);
+        sectionLists.appendChild(div);
+      }
+
+      function capitalize(s) {
+        return s.charAt(0).toUpperCase() + s.slice(1);
+      }
+
+      function formatDate(dateString) {
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+      }
+
+      function getIcon(status) {
+        return {
+          present: 'check-circle',
+          late: 'clock',
+          absent: 'times-circle'
+        }[status];
+      }
+      
+      // Analytics functions
+      viewAnalyticsBtn.addEventListener('click', () => {
+        if (analyticsSection.classList.contains('hidden')) {
+          updateAnalytics();
+          analyticsSection.classList.remove('hidden');
+        } else {
+          analyticsSection.classList.add('hidden');
+        }	
+      });
+
+      function updateAnalytics() {
+        document.getElementById("analytics-title").textContent = `Attendance Analytics for ${currentSection}`;
+        const chartCanvas = document.getElementById("attendance-chart");
+        const data = sectionData[currentSection] || [];
+
+        // Group by date and count statuses
+        const grouped = {};
+
+        data.forEach(entry => {
+          const date = entry.date;
+          if (!grouped[date]) {
+            grouped[date] = { present: 0, late: 0, absent: 0 };
+          }
+          grouped[date][entry.status]++;
+        });
+
+        const labels = Object.keys(grouped).sort();
+        const presentData = labels.map(date => grouped[date].present);
+        const lateData = labels.map(date => grouped[date].late);
+        const absentData = labels.map(date => grouped[date].absent);
+
+        // Destroy previous chart if exists
+        if (chart) chart.destroy();
+
+        chart = new Chart(chartCanvas, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Present',
+                data: presentData,
+                borderColor: '#4CAF50',
+                backgroundColor: '#4CAF50',
+                fill: false
+              },
+              {
+                label: 'Late',
+                data: lateData,
+                borderColor: 'orange',
+                backgroundColor: 'orange',
+                fill: false
+              },
+              {
+                label: 'Absent',
+                data: absentData,
+                borderColor: 'red',
+                backgroundColor: 'red',
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      // Enhanced PDF Generation with Statistics
+      document.getElementById('generatePdfBtn').addEventListener('click', generatePDF);
+      
+      function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Title and header information
+        doc.setFontSize(18);
+        doc.setTextColor(40, 167, 69); // Green color
+        doc.text(`Attendance Report of ${currentSection}`, 105, 15, { align: 'center' }); //header
+        
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0); // Black color
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 25);
+        doc.text(`Total Records: ${sectionData[currentSection]?.length || 0}`, 14, 35);
+        
+        // Calculate statistics
+        let presentCount = 0;
+        let lateCount = 0;
+        let absentCount = 0;
+        
+        const tableData = (sectionData[currentSection] || []).map(entry => {
+          // Count statuses
+          if (entry.status === 'present') presentCount++;
+          else if (entry.status === 'late') lateCount++;
+          else if (entry.status === 'absent') absentCount++;
+          
+          return [
+            entry.name,
+            formatDate(entry.date),
+            capitalize(entry.status)
+          ];
+        });
+        
+        // Add attendance table
+        doc.autoTable({
+          head: [['Student Name', 'Date', 'Status']],
+          body: tableData,
+          startY: 45,
+          theme: 'grid',
+          headStyles: {
+            fillColor: [41, 128, 185], // Blue header
+            textColor: 255
+          },
+          alternateRowStyles: {
+            fillColor: [240, 240, 240]
+          },
+          styles: {
+            cellPadding: 5,
+            fontSize: 10
+          },
+          columnStyles: {
+            0: { cellWidth: 'auto' },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 'auto' }
+          }
+        });
+        
+        // Add statistics section
+        const finalY = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.text('Attendance Statistics Summary', 14, finalY);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(40, 167, 69); // Green
+        doc.text(`Present: ${presentCount}`, 14, finalY + 10);
+        doc.setTextColor(255, 165, 0); // Orange
+        doc.text(`Late: ${lateCount}`, 14, finalY + 20);
+        doc.setTextColor(220, 53, 69); // Red
+        doc.text(`Absent: ${absentCount}`, 14, finalY + 30);
+        
+        // Add summary
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.text('TouchTrack Attendance System - CCS', 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        
+        // Save the PDF
+        doc.save(`Attendance_${currentSection}_${new Date().toISOString().slice(0,10)}.pdf`);
+      }
+    });
+
+    // View manager with guaranteed state consistency
+    const ViewManager = {
+      views: {
+        splash: document.getElementById('splash-screen'),
+        connection: document.getElementById('connection-choice'),
+        main: document.getElementById('main-app'),
+        analytics: document.getElementById('analytics-section')
+      },
+      
+      current: null,     // Stores the name of currently visible view
+      previous: null,    // Stores the name of previously visible view
+     
+      
+      init() {
+        // Set initial view
+        this.show('splash');
+      },
+      
+      show(viewName) {
+        // Validate view exists
+        if (!this.views[viewName]) return;
+        
+        // Hide current view if exists
+        if (this.current) {
+          this.views[this.current].classList.add('hidden');
+          this.previous = this.current;
+        }
+        
+        // Show new view
+        this.views[viewName].classList.remove('hidden');
+        this.current = viewName;
+        
+        // Special splash screen handling
+        if (viewName === 'splash') {
+          this.views.splash.style.display = 'flex';
+          this.views.splash.style.opacity = '1';
+          const startBtn = document.getElementById('start-btn');
+          if (startBtn) startBtn.style.opacity = '1';
+        }
+      },
+      
+      back() {
+        if (this.previous) {
+          this.show(this.previous);
+        } else {
+          // Default fallback to splash screen
+          this.show('splash');
+        }
+      }
+    };
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      ViewManager.init();
+    });
+
+    // Simple back button function
+    function goBack() {
+      ViewManager.back();
+    }
+  </script>
+</body>
+</html>
